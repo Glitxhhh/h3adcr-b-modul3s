@@ -34,6 +34,47 @@ STEAMDATA="$STEAMROOT"
 if [ -z ${STEAMEXE-} ]; then
   STEAMEXE=`basename "$0" .sh`
 fi
+
+MAGIC_RESTART_EXITCODE=42
+
+function has_beta_optin()
+{
+	local betafile="$STEAMROOT/package/beta"
+	if [ ! -r "$betafile" ]; then
+		# No beta file, not in beta
+		return 1
+	fi
+
+	local betaname="$(<"$betafile")"
+	local stablenames=( "" "steamdeck_stable" "chromeos_public_88ac3843c888c7adb9cd406fbac4ff7a7d2cde9b" )
+
+	for name in "${stablenames[@]}"; do
+		if [ "$betaname" == "$name" ]; then
+			# Opted into one of the "stable" betas
+			return 1
+		fi
+	done
+
+	return 0
+}
+
+if has_beta_optin; then
+	if [ -e "$STEAMROOT/.steam-enable-steamrt64-client" ]; then
+		if [ -x "$STEAMROOT/steamrt64/steam" ]; then
+			log "Starting SteamRT3 Steam"
+			"$STEAMROOT/steamrt64/steam" "$@"
+			STATUS=$?
+
+			# If steam requested to restart, then restart
+			if [ $STATUS -eq $MAGIC_RESTART_EXITCODE ] ; then
+				log "Restarting SteamRT3 Steam by request"
+				exec "$0" "$@"
+			fi
+			exit $STATUS
+		fi
+	fi
+fi
+
 # Backward compatibility for server operators
 if [ "$STEAMEXE" = "steamcmd" ]; then
 	log "***************************************************"
@@ -867,9 +908,6 @@ export SDL_VIDEO_X11_DGAMOUSE=0
 if [ "$UNAME" = "Linux" ]; then
 	: >"$STEAMSTARTING"
 fi
-
-MAGIC_RESTART_EXITCODE=42
-SEGV_EXITCODE=139
 
 # and launch steam
 STEAM_DEBUGGER=${DEBUGGER-}
