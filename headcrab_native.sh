@@ -2,7 +2,7 @@
 
 
     STEAM_CLIENT="$HOME/.steam/steam/client.sh"
-    INJECT_SLS="LD_AUDIT=$HOME/.local/share/SLSsteam/library-inject.so:$HOME/.local/share/SLSsteam/SLSsteam.so"
+    INJECT_SLS="LD_AUDIT=$HOME/.local/share/SLSsteam/library-inject.so:$HOME/.local/share/SLSsteam/SLSsteam.so:$HOME/.local/share/CloudRedirect/cloud_redirect.so"
 
        GameLauncher(){
         export $INJECT_SLS &> /dev/null
