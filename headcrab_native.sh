@@ -7,7 +7,7 @@
        GameLauncher(){
         export $INJECT_SLS &> /dev/null
         export $INJECT_CR &> /dev/null
-        source $STEAM_CLIENT "$@"
+        source $STEAM_CLIENT "$@" &> /dev/null
         }
 
 
