@@ -4,6 +4,7 @@ Name=Headcrab Updater
 Comment=Updates Client And SLSsteam
 Exec=bash -c "curl -fsSL "https://raw.githubusercontent.com/Deadboy666/h3adcr-b/refs/heads/main/headcrab.sh" | bash"
 Terminal=true
+Icon=headcrab
 Type=Application
 Categories=Utility;Application;
 
