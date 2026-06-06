@@ -13,7 +13,9 @@ set -eu
     flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
     flatpak --user update --appstream --noninteractive
     flatpak install --user flathub org.kde.Platform//6.10 --assumeyes --noninteractive
-    flatpak install --user --reinstall org.cloudredirect.CloudRedirect --assumeyes --noninteractive
+    flatpak install --user --reinstall cloudredirect.flatpak --assumeyes --noninteractive
+    rm $SCRIPT_DIR/cloudredirect.flatpak
     echo "App Installed Open It To Configure Your Storage Provider"
+    
     }
     install_CR
