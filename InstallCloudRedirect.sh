@@ -1,21 +1,17 @@
 #!/usr/bin/env bash
 set -eu
     
-    #Paths
-    SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-    CloudRedirectApp="https://github.com/Selectively11/h3adcr-b/releases/download/linux-test/cloudredirect.flatpak"
+    cloudredirect="https://raw.githubusercontent.com/Selectively11/CloudRedirect/refs/heads/gh-pages/cloudredirect.flatpakrepo"
+    flathub="https://dl.flathub.org/repo/flathub.flatpakrepo"
 
     install_CR(){
-    cd $SCRIPT_DIR/
-    wget -O cloudredirect.flatpak "$CloudRedirectApp" &> /dev/null
-    echo "Installing Cloud Redirect App"
-    flatpak remote-add --user --if-not-exists cloudredirect https://raw.githubusercontent.com/Selectively11/CloudRedirect/refs/heads/gh-pages/cloudredirect.flatpakrepo
-    flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-    flatpak --user update --appstream --noninteractive &> /dev/null
-    flatpak install --user flathub org.kde.Platform//6.10 --assumeyes --noninteractive
-    flatpak install --user --reinstall cloudredirect.flatpak --assumeyes --noninteractive
-    rm $SCRIPT_DIR/cloudredirect.flatpak
-    echo "App Installed Open It To Configure Your Storage Provider"
-    
+        echo "Installing Cloud Redirect App"
+        flatpak remote-add --user --if-not-exists cloudredirect $cloudredirect
+        flatpak remote-add --user --if-not-exists flathub $flathub
+        flatpak --user update --appstream --noninteractive
+        flatpak install --user flathub org.kde.Platform//6.10 --assumeyes --noninteractive
+        flatpak install --user --reinstall org.cloudredirect.CloudRedirect --assumeyes --noninteractive
+        update-desktop-database
+        echo "App Installed Open It To Configure Your Storage Provider"
     }
     install_CR
