@@ -11,7 +11,7 @@ set -eu
     echo "Installing Cloud Redirect App"
     flatpak remote-add --user --if-not-exists cloudredirect https://raw.githubusercontent.com/Selectively11/CloudRedirect/refs/heads/gh-pages/cloudredirect.flatpakrepo
     flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-    flatpak --user update --appstream --noninteractive
+    flatpak --user update --appstream --noninteractive &> /dev/null
     flatpak install --user flathub org.kde.Platform//6.10 --assumeyes --noninteractive
     flatpak install --user --reinstall cloudredirect.flatpak --assumeyes --noninteractive
     rm $SCRIPT_DIR/cloudredirect.flatpak
