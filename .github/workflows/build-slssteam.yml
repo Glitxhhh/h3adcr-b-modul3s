@@ -1,0 +1,55 @@
+name: Build SLSsteam
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Enable i386 and install build deps
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-multilib g++-multilib \
+            libssl-dev:i386 \
+            libcurl4-openssl-dev:i386 \
+            p7zip-full
+
+      - name: Clone SLSsteam
+        run: git clone --depth=1 https://github.com/AceSLS/SLSsteam.git
+
+      - name: Build
+        working-directory: SLSsteam
+        env:
+          PKG_CONFIG_PATH: /usr/lib/i386-linux-gnu/pkgconfig
+        run: make bin/SLSsteam.so bin/library-inject.so
+
+      - name: Package
+        working-directory: SLSsteam
+        run: |
+          7z a SLSsteam-Any.7z \
+            bin/SLSsteam.so \
+            bin/library-inject.so \
+            setup.sh \
+            docs \
+            res
+
+      - name: Get source version
+        id: ver
+        working-directory: SLSsteam
+        run: echo "ver=$(cat res/version.txt)" >> $GITHUB_OUTPUT
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: slssteam-${{ steps.ver.outputs.ver }}
+          name: SLSsteam ${{ steps.ver.outputs.ver }}
+          body: Auto-built from AceSLS/SLSsteam main (includes latest SafeMode hashes)
+          files: SLSsteam/SLSsteam-Any.7z
+          make_latest: true
