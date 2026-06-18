@@ -1,4 +1,4 @@
-name: Build SLSsteam
+name: Build SLSsteam (Asgard)
 on:
   schedule:
     - cron: '0 6 * * 1'
@@ -21,17 +21,17 @@ jobs:
             libcurl4-openssl-dev:i386 \
             p7zip-full
 
-      - name: Clone SLSsteam
-        run: git clone --depth=1 https://github.com/AceSLS/SLSsteam.git
+      - name: Clone SLSSteam-Asgard
+        run: git clone --depth=1 -b slsteam-moon https://git.bifrosthub.ru/glitxh/SLSSteam-Asgard.git SLSSteam
 
       - name: Build
-        working-directory: SLSsteam
+        working-directory: SLSSteam
         env:
           PKG_CONFIG_PATH: /usr/lib/i386-linux-gnu/pkgconfig
         run: make bin/SLSsteam.so bin/library-inject.so
 
       - name: Package
-        working-directory: SLSsteam
+        working-directory: SLSSteam
         run: |
           7z a SLSsteam-Any.7z \
             bin/SLSsteam.so \
@@ -42,14 +42,14 @@ jobs:
 
       - name: Get source version
         id: ver
-        working-directory: SLSsteam
-        run: echo "ver=$(cat res/version.txt)" >> $GITHUB_OUTPUT
+        working-directory: SLSSteam
+        run: echo "ver=$(git log -1 --format=%cd --date=format:%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: slssteam-${{ steps.ver.outputs.ver }}
-          name: SLSsteam ${{ steps.ver.outputs.ver }}
-          body: Auto-built from AceSLS/SLSsteam main (includes latest SafeMode hashes)
-          files: SLSsteam/SLSsteam-Any.7z
+          name: SLSsteam ${{ steps.ver.outputs.ver }} (Asgard)
+          body: Auto-built from SLSSteam-Asgard/slsteam-moon (includes latest SafeMode hashes and Asgard patches)
+          files: SLSSteam/SLSsteam-Any.7z
           make_latest: true
