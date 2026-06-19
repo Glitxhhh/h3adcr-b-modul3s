@@ -177,8 +177,6 @@
        GameLauncher(){
         CheckClientInfo
         echo "Loaded SLSsteam" & export $INJECT_SLS &> /dev/null
-        CR_SO="$HOME/.local/share/CloudRedirect/cloud_redirect.so"
-        [ -f "$CR_SO" ] && export LD_PRELOAD="$CR_SO${LD_PRELOAD:+:$LD_PRELOAD}"
         source $STEAM_CLIENT "$@" &> /dev/null
         }
 
