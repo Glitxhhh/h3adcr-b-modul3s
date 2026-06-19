@@ -3,6 +3,7 @@
 
     STEAM_CLIENT="$HOME/.steam/steam/client.sh"
     INJECT_SLS="LD_AUDIT=$HOME/.local/share/SLSsteam/library-inject.so:$HOME/.local/share/SLSsteam/SLSsteam.so"
+    INJECT_CR="LD_PRELOAD=$HOME/.local/share/CloudRedirect/cloud_redirect.so"
     NOTIF="$HOME/.local/share/icons/hicolor/48x48/apps/headcrab.png"
     FlatpakSteamInstallDir=$HOME/.var/app/com.valvesoftware.Steam/.steam/steam
     SteamInstallDir=$HOME/.steam/steam
@@ -177,6 +178,7 @@
        GameLauncher(){
         CheckClientInfo
         echo "Loaded SLSsteam" & export $INJECT_SLS &> /dev/null
+        echo "Loaded CloudRedirect" & export $INJECT_CR &> /dev/null
         source $STEAM_CLIENT "$@" &> /dev/null
         }
 
