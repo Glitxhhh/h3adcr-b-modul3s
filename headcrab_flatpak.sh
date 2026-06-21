@@ -6,6 +6,7 @@
     NOTIF="$HOME/.local/share/icons/hicolor/48x48/apps/headcrab.png"
     FlatpakSteamInstallDir=$HOME/.var/app/com.valvesoftware.Steam/.steam/steam
     SteamInstallDir=$HOME/.steam/steam
+    ValhallaToolsDir="$HOME/.local/share/ValhallaTools"
 
 
  read_os_release(){
@@ -174,9 +175,28 @@
                 echo "" &> /dev/null
             }
 
+       LaunchValhallaTools(){
+        # Run as a transient systemd --user service rather than a plain
+        # setsid/nohup background job: a bare "setsid nohup cmd &" was
+        # observed getting cleaned up a few seconds after the launching
+        # shell's session ended (confirmed on a live Steam Deck). A
+        # systemd-run --user unit survives independently of the session
+        # that created it.
+        if [ -f "$ValhallaToolsDir/lua/boot.lua" ] && command -v lua5.4 >/dev/null 2>&1 \
+           && command -v systemd-run >/dev/null 2>&1; then
+            if ! systemctl --user is-active --quiet valhallatools.service 2>/dev/null; then
+                echo "Loaded ValhallaTools"
+                systemd-run --user --collect --unit=valhallatools \
+                    -E VALHALLA_LUA_DIR="$ValhallaToolsDir/lua" \
+                    lua5.4 "$ValhallaToolsDir/lua/boot.lua" >/dev/null 2>&1
+            fi
+        fi
+        }
+
        GameLauncher(){
         CheckClientInfo
         echo "Loaded SLSsteam" & export $INJECT_SLS &> /dev/null
+        LaunchValhallaTools
         source $STEAM_CLIENT "$@" &> /dev/null
         }
 
