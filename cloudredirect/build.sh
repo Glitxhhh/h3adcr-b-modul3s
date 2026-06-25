@@ -1,23 +1,28 @@
 #!/usr/bin/env bash
 # Reproducibly rebuild the bundled cloud_redirect.so.
 #
-# Clones cloudredirect-moon (unplausible's branch of CloudRedirect that
-# slsteam-moon is designed to pair with) at the pinned commit and builds a
-# 32-bit .so. The result is copied next to this script as cloud_redirect.so.
+# Clones CloudRedirect at the pinned upstream commit, applies our patch
+# (slsteammoon-cloudredirect.patch), and builds a 32-bit .so. The result is
+# copied next to this script as cloud_redirect.so.
 #
-# No local patch is applied. This repo used to carry slsteammoon-cloudredirect
-# .patch (attach-wait 10s->120s, CAS SHA-leaf healing, worker-thread exception
-# containment, KV-read crash guards) on top of raw Selectively11/CloudRedirect.
-# Rebasing onto cloudredirect-moon @ d7d3469 (2026-06-25) showed every one of
-# those hunks now has a byte-for-byte equivalent fix upstream (511db1fe,
-# b6ff6887, f12a6104, b7cbd787, bdf773c1, 247a59c3, 508abdc7) -- so the patch
-# was dropped rather than carried forward dead. If a future rebase needs a
-# fork-specific fix again, re-add a patch file and an `apply` step here; check
-# upstream's own log first per the pattern above before re-adding any hunk.
+# Tracks Selectively11/CloudRedirect directly -- the actual upstream project,
+# not a third-party branch. We previously rebased onto unplausible's
+# cloudredirect-moon (since slsteam-moon is designed to pair with it and it
+# carried useful Linux-hook hardening fixes), but unplausible privated all
+# their repos, and depending on a fork of a fork for compatibility isn't worth
+# it anyway. Re-confirmed our patch's hunks are still genuinely needed:
+# Selectively11's own master never picked them up (it went a different
+# direction -- Windows RVA tracking, signature-failure recovery -- so it's
+# missing the worker-thread exception containment, CAS-leaf healing, and KV
+# crash guards this patch adds). The patch applied cleanly, unmodified,
+# straight onto current upstream HEAD.
 #
 # BASE_COMMIT must always track upstream's actual latest -- headcrab always
 # fetches whatever .so sits here, so a stale pin means every install gets a
-# stale build. When upstream moves, re-pin BASE_COMMIT and re-run this script.
+# stale build. When upstream moves, re-pin BASE_COMMIT, re-run this script,
+# and if it fails to apply, reconcile the patch against the new base first
+# (some hunks may already be superseded by upstream's own fix -- check before
+# re-adding them).
 #
 # Usage:  ./build.sh
 #
@@ -30,8 +35,8 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-UPSTREAM="https://codeberg.org/unplausible/cloudredirect-moon.git"
-BASE_COMMIT="d7d3469951ae5d9d18d1674f5c1717eb8a7d0d5d"  # pinned upstream HEAD (2.1.9)
+UPSTREAM="https://github.com/Selectively11/CloudRedirect.git"
+BASE_COMMIT="b0acf2099dd9ad3ff63661b78a4df1250577bf62"  # pinned upstream HEAD (2.2.1-final)
 IMAGE="slsteammoon-cloudredirect-builder"
 WORK="$HERE/.build-src"
 
@@ -39,6 +44,9 @@ echo "==> fetching upstream @ $BASE_COMMIT"
 rm -rf "$WORK"
 git clone --no-checkout "$UPSTREAM" "$WORK"
 git -C "$WORK" checkout "$BASE_COMMIT"
+
+echo "==> applying slsteam-moon patch"
+git -C "$WORK" apply "$HERE/slsteammoon-cloudredirect.patch"
 
 runtime=""
 for c in podman docker; do
