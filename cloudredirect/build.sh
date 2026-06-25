@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 # Reproducibly rebuild the bundled cloud_redirect.so.
 #
-# Clones CloudRedirect at the pinned upstream commit, applies our patch
-# (slsteammoon-cloudredirect.patch), and builds a 32-bit .so. The result is
-# copied next to this script as cloud_redirect.so.
+# Clones cloudredirect-moon (unplausible's branch of CloudRedirect that
+# slsteam-moon is designed to pair with) at the pinned commit and builds a
+# 32-bit .so. The result is copied next to this script as cloud_redirect.so.
+#
+# No local patch is applied. This repo used to carry slsteammoon-cloudredirect
+# .patch (attach-wait 10s->120s, CAS SHA-leaf healing, worker-thread exception
+# containment, KV-read crash guards) on top of raw Selectively11/CloudRedirect.
+# Rebasing onto cloudredirect-moon @ d7d3469 (2026-06-25) showed every one of
+# those hunks now has a byte-for-byte equivalent fix upstream (511db1fe,
+# b6ff6887, f12a6104, b7cbd787, bdf773c1, 247a59c3, 508abdc7) -- so the patch
+# was dropped rather than carried forward dead. If a future rebase needs a
+# fork-specific fix again, re-add a patch file and an `apply` step here; check
+# upstream's own log first per the pattern above before re-adding any hunk.
 #
 # BASE_COMMIT must always track upstream's actual latest -- headcrab always
 # fetches whatever .so sits here, so a stale pin means every install gets a
-# stale build. When upstream moves, re-pin BASE_COMMIT, re-run this script,
-# and if it fails to apply, reconcile the patch against the new base first
-# (some hunks may already be superseded by upstream's own fix -- check before
-# re-adding them; see git log for how the steam_kv_injector.cpp rebase onto
-# 178a6de dropped our GOT-decode hunk once upstream shipped its own).
+# stale build. When upstream moves, re-pin BASE_COMMIT and re-run this script.
 #
 # Usage:  ./build.sh
 #
@@ -24,8 +30,8 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-UPSTREAM="https://github.com/Selectively11/CloudRedirect.git"
-BASE_COMMIT="178a6dea888f1de31e1ec9040e49ae3bf4d4e9e9"  # pinned upstream HEAD (v2.1.8-final)
+UPSTREAM="https://codeberg.org/unplausible/cloudredirect-moon.git"
+BASE_COMMIT="d7d3469951ae5d9d18d1674f5c1717eb8a7d0d5d"  # pinned upstream HEAD (2.1.9)
 IMAGE="slsteammoon-cloudredirect-builder"
 WORK="$HERE/.build-src"
 
@@ -33,9 +39,6 @@ echo "==> fetching upstream @ $BASE_COMMIT"
 rm -rf "$WORK"
 git clone --no-checkout "$UPSTREAM" "$WORK"
 git -C "$WORK" checkout "$BASE_COMMIT"
-
-echo "==> applying slsteam-moon patch"
-git -C "$WORK" apply "$HERE/slsteammoon-cloudredirect.patch"
 
 runtime=""
 for c in podman docker; do
